@@ -1,0 +1,7 @@
+supabase
+openai
+groq
+elevenlabs
+psycopg2-binary
+requests
+python-dotenv
