@@ -8,7 +8,8 @@
     "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "npm run build"
+    "vercel-build": "npm run build",
+    "build:dev": "vite build --mode development"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.3",
