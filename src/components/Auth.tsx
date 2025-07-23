@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
-import { Terminal, Mail, Lock, User, ArrowRight, Code2 } from 'lucide-react'
+import { Terminal, ArrowRight, Code2 } from 'lucide-react'
 
 export function Auth() {
   const [isSignUp, setIsSignUp] = useState(false)

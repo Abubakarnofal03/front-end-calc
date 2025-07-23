@@ -66,7 +66,7 @@ function fixJsonEscaping(jsonString: string): string {
     
     // Fix template literal backticks - this is the main issue
     // Handle multi-line content with backticks
-    fixed = fixed.replace(/"content":\s*`([^`]*(?:\\.[^`]*)*)`/gs, (match, content) => {
+    fixed = fixed.replace(/"content":\s*`([^`]*(?:\\.[^`]*)*)`/gs, (_match, content) => {
       // Properly escape the content for JSON
       const escapedContent = content
         .replace(/\\/g, '\\\\')  // Escape backslashes first
@@ -81,7 +81,7 @@ function fixJsonEscaping(jsonString: string): string {
     })
     
     // Handle any other field with backticks
-    fixed = fixed.replace(/"(\w+)":\s*`([^`]*(?:\\.[^`]*)*)`/gs, (match, fieldName, content) => {
+    fixed = fixed.replace(/"(\w+)":\s*`([^`]*(?:\\.[^`]*)*)`/gs, (_match, fieldName, content) => {
       const escapedContent = content
         .replace(/\\/g, '\\\\')
         .replace(/"/g, '\\"')
@@ -145,7 +145,7 @@ function fixJsonEscaping(jsonString: string): string {
     if (!fixed.trim().endsWith('}') && !fixed.trim().endsWith(']')) {
       // Find the last complete field and close the JSON
       const lastCompleteFieldMatch = fixed.match(/.*"[^"]+"\s*:\s*(?:"[^"]*"|[^,}]+)(?=\s*[,}])/s)
-      if (lastCompleteFieldMatch) {
+      if (lastCompleteFieldMatch && lastCompleteFieldMatch.index !== undefined) {
         const lastCompleteIndex = lastCompleteFieldMatch.index + lastCompleteFieldMatch[0].length
         fixed = fixed.substring(0, lastCompleteIndex) + '}'
       } else {
@@ -356,6 +356,7 @@ Make the content comprehensive, educational, and well-formatted. Ensure all stri
 
   const personalizedPrompt = createPersonalizedPrompt(basePrompt, userProfile)
 
+  let response: string | undefined
   try {
     const completion = await groq.chat.completions.create({
       messages: [{ role: 'user', content: personalizedPrompt }],
@@ -364,7 +365,7 @@ Make the content comprehensive, educational, and well-formatted. Ensure all stri
       max_tokens: 4000
     })
 
-    const response = completion.choices[0]?.message?.content
+    response = completion.choices[0]?.message?.content || undefined
     if (!response) throw new Error('No response from Groq API')
 
     const cleanedResponse = cleanJsonResponse(response)
@@ -381,8 +382,9 @@ Make the content comprehensive, educational, and well-formatted. Ensure all stri
   } catch (error) {
     console.error('Error parsing detailed content response:', error)
     // Enhanced fallback: try to extract content manually
-    let fallbackContent = { content: '', keyPoints: [], examples: [], practicalApplications: [] };
+    let fallbackContent: { content: string; keyPoints: string[]; examples: string[]; practicalApplications: string[] } = { content: '', keyPoints: [], examples: [], practicalApplications: [] };
     try {
+      // Try to get the raw response from the completion if available
       if (typeof response === 'string') {
         fallbackContent = extractContentFromResponse(response)
       }
@@ -514,13 +516,13 @@ Make questions challenging and test deep understanding of the concepts taught.`
     
     // Ensure proper structure with defaults
     return {
-      mcq: Array.isArray(parsed.mcq) ? parsed.mcq.map(q => ({
+      mcq: Array.isArray(parsed.mcq) ? parsed.mcq.map((q: any) => ({
         question: String(q.question || ''),
         options: Array.isArray(q.options) ? q.options.map(String) : [],
         correct_answer: String(q.correct_answer || ''),
         explanation: String(q.explanation || '')
       })) : [],
-      theory: Array.isArray(parsed.theory) ? parsed.theory.map(q => ({
+      theory: Array.isArray(parsed.theory) ? parsed.theory.map((q: any) => ({
         question: String(q.question || ''),
         correct_answer: String(q.correct_answer || ''),
         key_points: Array.isArray(q.key_points) ? q.key_points.map(String) : []
@@ -670,6 +672,7 @@ Make the response educational and engaging.`
 
   const personalizedPrompt = createPersonalizedPrompt(basePrompt, userProfile)
 
+  let response: string | undefined
   try {
     const completion = await groq.chat.completions.create({
       messages: [{ role: 'user', content: personalizedPrompt }],
@@ -678,7 +681,7 @@ Make the response educational and engaging.`
       max_tokens: 2500
     })
 
-    const response = completion.choices[0]?.message?.content
+    response = completion.choices[0]?.message?.content || undefined
     if (!response) throw new Error('No response from Groq API')
 
     const cleanedResponse = cleanJsonResponse(response)
@@ -697,7 +700,7 @@ Make the response educational and engaging.`
     
     // Fallback: return a basic structure with the raw content
     return {
-      answer: completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.',
+      answer: response || 'Sorry, I could not generate a response.',
       relatedConcepts: [],
       furtherReading: []
     }
